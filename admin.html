@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Панель адміністратора</title>
+  <style>
+
+    .sidebar {
+      position: fixed; /* Фіксує панель у певному місці */
+      top: 0;
+      left: 0; /* Панель знаходиться з лівого боку */
+      width: 150px; /* Ширина панелі */
+      height: 100%; /* Панель займає всю висоту екрана */
+      background-color: #333; /* Темний фон для панелі */
+      padding-top: 20px; /* Відступ зверху */
+    }
+
+    /* Стилі для кнопок в меню */
+    .sidebar button {
+      display: block; /* Кнопки йдуть по черзі одна під одною */
+      width: 100%; /* Кнопки займають всю ширину панелі */
+      padding: 10px; /* Відступи всередині кнопок */
+      margin-bottom: 10px; /* Відступ між кнопками */
+      background-color: #4CAF50; /* Колір кнопок */
+      color: white; /* Колір тексту */
+      border: none; /* Без обведення */
+      text-align: left; /* Текст вирівняно по лівому краю */
+      cursor: pointer; /* Зміна курсора на вказівник при наведенні */
+    }
+
+    .login-section, .admin-panel { /* Спочатку приховуємо обидві секції */
+      margin: 20px;
+      margin-left: 170px;
+    }
+    .admin-panel .btn {
+      margin: 10px;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-left: 170px;
+    }
+    .admin-panel .btn:hover {
+      background-color: #45a049;
+    }
+
+    .form {
+      display: none; /* Спочатку приховуємо обидві секції */
+      margin: 20px;
+      margin-left: 170px;}
+  </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button class="sidebar-btn" data-target="main.html">Головна</button>
+        <button class="sidebar-btn" data-target="aboutUs.html">Про нас</button>
+        <button class="sidebar-btn" data-target="categories.html">Категорії</button>
+        <button class="sidebar-btn" data-target="admin.html">Увійти як адміністратор</button>
+    </div>
+
+    <!-- Секція для входу адміністратора -->
+    <div class="login-section" id="loginSection">
+        <h2>Вхід адміністратора</h2>
+        <form id="adminLoginForm">
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" required>
+            <button type="submit">Увійти</button>
+        </form>
+        <p id="loginMessage" style="color: red;"></p>
+    </div>
+
+    <!-- Панель адміністратора -->
+    <div class="admin-panel" id="adminPanel">
+        <h2>Керування елементами бази даних</h2>
+        <button class="btn" onclick="showAddItemForm()">Додати елемент</button>
+        <button class="btn" onclick="showEditItemForm()">Редагувати елемент</button>
+        <button class="btn" onclick="showDeleteItemForm()">Видалити елемент</button>
+    </div>
+
+    <!-- Форма для додавання елементу -->
+    <div id="addItemForm" class="form">
+        <h3>Додати елемент</h3>
+        <form id="addItem">
+            <label for="itemName">Назва:</label>
+            <input type="text" id="itemName" required>
+
+            <label for="category">Категорія:</label>
+            <select id="category" required>
+              <option value="">Оберіть категорію</option>
+            </select>
+
+            <label for="description">Опис:</label>
+            <textarea id="description" required></textarea>
+            <button type="submit">Додати</button>
+        </form>
+    </div>
+
+    <script>
+      console.log("Скрипт завантажено");
+      // Функція для показу форми додавання елемента
+      function showAddItemForm() {
+        document.getElementById('addItemForm').style.display = 'block';
+        document.getElementById('editItemForm').style.display = 'none';
+        document.getElementById('deleteItemForm').style.display = 'none';
+      }
+
+      // Отримання категорій
+      fetch('http://localhost:3000/api/categories')
+        .then(response => response.json())
+        .then(data => {
+          const categorySelect = document.getElementById('category');
+          data.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id; // Значення буде id категорії
+            option.textContent = category.name; // Текст - це назва категорії
+            categorySelect.appendChild(option);
+          });
+        })
+        .catch(error => {
+          console.error('Помилка отримання категорій:', error);
+        });
+
+      // Обробка форми
+      document.getElementById('addItem').addEventListener('submit', function(event) {
+        event.preventDefault(); // Запобігаємо перезавантаженню сторінки при відправці форми
+
+        const itemName = document.getElementById('itemName').value;
+        const categoryId = document.getElementById('category').value;
+        const description = document.getElementById('description').value;
+
+        // Створюємо об'єкт для POST-запиту
+        const itemData = {
+          name: itemName,
+          category_id: categoryId,
+          description: description
+        };
+
+        // Надсилаємо POST-запит на сервер
+        fetch('http://localhost:3000/api/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(itemData)
+        })
+          .then(response => response.json())
+          .then(data => {
+            alert('Товар додано успішно!');
+          })
+          .catch(error => {
+            console.error('Помилка додавання товару:', error);
+          });
+      });
+
+      // Обробка кнопки для входу адміністратора
+      document.getElementById('adminLoginForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Запобігаємо перезавантаженню сторінки при відправці форми
+        const password = document.getElementById('password').value;
+
+        if (password === 'admin') { // Тут може бути будь-який пароль
+          document.getElementById('loginSection').style.display = 'none';
+          document.getElementById('adminPanel').style.display = 'block';
+        } else {
+          document.getElementById('loginMessage').textContent = 'Невірний пароль';
+        }
+      });
+      // функція для роботи кнопок
+      const sidebarButtons = document.querySelectorAll(".sidebar-btn");
+    
+        sidebarButtons.forEach(button => {
+          button.addEventListener("click", () => {
+            const targetPage = button.getAttribute("data-target");
+            window.location.href = targetPage;
+          });
+        });
+    </script>
+</body>
+</html>

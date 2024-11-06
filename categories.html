@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сторінка з кнопками</title>
+    <style>
+
+        /* Стилі для бокової панелі */
+        .sidebar {
+            position: fixed; /* Фіксує панель у певному місці */
+            top: 0;
+            left: 0; /* Панель знаходиться з лівого боку */
+            width: 150px; /* Ширина панелі */
+            height: 100%; /* Панель займає всю висоту екрана */
+            background-color: #333; /* Темний фон для панелі */
+            padding-top: 20px; /* Відступ зверху */
+        }
+
+        /* Стилі для кнопок в меню */
+        .sidebar button {
+            display: block; /* Кнопки йдуть по черзі одна під одною */
+            width: 100%; /* Кнопки займають всю ширину панелі */
+            padding: 10px; /* Відступи всередині кнопок */
+            margin-bottom: 10px; /* Відступ між кнопками */
+            background-color: #4CAF50; /* Колір кнопок */
+            color: white; /* Колір тексту */
+            border: none; /* Без обведення */
+            text-align: left; /* Текст вирівняно по лівому краю */
+            cursor: pointer; /* Зміна курсора на вказівник при наведенні */
+        }
+
+        /* Стиль кнопок при наведенні */
+        .sidebar button:hover {
+            background-color: #45a049; /* Трохи світліший відтінок */
+        }
+
+        /* Стиль для основного контенту сторінки */
+        .categories {
+            margin-left: 210px; /* Відступ для основного контенту після панелі */
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <button class="sidebar-btn" data-target="main.html">Головна</button>
+        <button class="sidebar-btn" data-target="aboutUs.html">Про нас</button>
+        <button class="sidebar-btn" data-target="categories.html">Категорії</button>
+        <button class="sidebar-btn" data-target="admin.html">Увійти як адміністратор</button>
+    </div>
+
+    <div class="categories">
+      <h1>Категорії</h1>
+      <!-- Контейнер для кнопок категорій -->
+      <div id="categories"></div>
+  </div>
+    <script>
+        // JavaScript для обробки натискань на кнопки sidebar
+        const sidebarButtons = document.querySelectorAll(".sidebar-btn");
+
+        sidebarButtons.forEach(button => {
+          button.addEventListener("click", () => {
+            const targetPage = button.getAttribute("data-target");
+            window.location.href = targetPage;
+          });
+        });
+
+        // Запит на отримання категорій
+        fetch('http://localhost:3000/api/categories')
+          .then(response => response.json())
+          .then(data => {
+            const categoriesDiv = document.getElementById('categories');
+            data.forEach(category => {
+              const button = document.createElement('button');
+              button.textContent = category.name;
+              button.onclick = () => {
+                window.location.href = `/products.html?categoryId=${category.id}`;
+              };
+              categoriesDiv.appendChild(button);
+            });
+          })
+          .catch(error => {
+            console.error('Помилка отримання категорій:', error);
+          });
+      </script>
+</body>
+</html>
