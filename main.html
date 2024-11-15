@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <title>Категорії зброї</title>
   <style>
+
+    #category-container, #subcategory-container, #product-container{
+      margin-left: 210px; /* Відступ для основного контенту після панелі */
+      padding: 20px;
+    }
     .category-container {
             margin-left: 210px; /* Відступ для основного контенту після панелі */
             padding: 20px;
@@ -36,7 +41,7 @@
     .category-button {
       padding: 10px 20px;
       margin: 10px;
-      background-color: #007BFF;
+      background-color: #d56e05;
       color: white;
       border: none;
       border-radius: 5px;
@@ -47,70 +52,125 @@
     .category-button:hover {
       background-color: #0056b3;
     }
+
+    #video-container {
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            margin-top: 200px;
+            margin-left: 200px;
+        }
   </style>
 </head>
 <body>
   <div class="sidebar">
     <button class="sidebar-btn" data-target="main.html">Головна</button>
     <button class="sidebar-btn" data-target="aboutUs.html">Про нас</button>
-    <button class="sidebar-btn" data-target="categories.html">Категорії</button>
     <button class="sidebar-btn" data-target="admin.html">Увійти як адміністратор</button>
 </div>
 
-<div id="category-container" class="category-container">
-  <h1>Виберіть категорію</h1>
+<!-- Контейнер для категорій -->
+<div id="category-container"></div>
 
-</div>
+<!-- Контейнер для підкатегорій (в залежності від вибору категорії) -->
+<div id="subcategory-container" style="display: none;"></div>
 
-  <script>
-    // Функція для завантаження та відображення категорій
-    async function loadCategories() {
-      try {
-        const response = await fetch('/api/categories'); // Запит до сервера
-        const categories = await response.json(); // Отримуємо дані у форматі JSON
+<!-- Контейнер для товарів (в залежності від вибору підкатегорії) -->
+<div id="product-container" style="display: none;"></div>
 
-        const container = document.getElementById('category-container');
-        container.innerHTML = ''; // Очищуємо контейнер перед додаванням нових елементів
-
-        categories.forEach(category => {
-          const button = document.createElement('button');
-          button.className = 'category-button';
-          button.textContent = category.name; // Припустимо, що у таблиці є поле 'name'
-          container.appendChild(button);
-        });
-      } catch (error) {
-        console.error('Помилка завантаження категорій:', error);
-      }
-    }
-
-    // Викликаємо функцію завантаження категорій при завантаженні сторінки
-    document.addEventListener('DOMContentLoaded', loadCategories);
-
-    const sidebarButtons = document.querySelectorAll(".sidebar-btn");
+<script>
+  async function loadCategories() {
+  try {
+    const response = await fetch('http://localhost:3000/api/categories');
+    const categories = await response.json();
     
-        sidebarButtons.forEach(button => {
-          button.addEventListener("click", () => {
-            const targetPage = button.getAttribute("data-target");
-            window.location.href = targetPage;
-          });
-        });
+    const container = document.getElementById('category-container');
+    container.innerHTML = ''; 
 
-      іfetch('http://localhost:3000/api/categories')
-      .then(response => response.json())
-      .then(data => {
-        const categoriesDiv = document.getElementById('categories');
-        data.forEach(category => {
-          const button = document.createElement('button');
-          button.textContent = category.name;
-          button.onclick = () => {
-            window.location.href = `/products.html?categoryId=${category.id}`;
-          };
-          categoriesDiv.appendChild(button);
-        });
-      })
-      .catch(error => {
-        console.error('Помилка отримання категорій:', error);
+    categories.forEach(category => {
+      const button = document.createElement('button');
+      button.className = 'category-button';
+      button.textContent = category.category_name;
+      button.onclick = () => loadSubcategories(category.id); // Завантажуємо підкатегорії для вибраної категорії
+      container.appendChild(button);
+    });
+  } catch (error) {
+    console.error('Помилка завантаження категорій:', error);
+  }
+}
+
+async function loadSubcategories(categoryId) { 
+  try {
+    const response = await fetch(`http://localhost:3000/api/subcategories/${categoryId}`);
+    const subcategories = await response.json();
+    
+    const container = document.getElementById('subcategory-container');
+    container.innerHTML = ''; // Очищуємо контейнер для підкатегорій
+    container.style.display = 'block'; // Показуємо контейнер з підкатегоріями
+
+    console.log(subcategories); // Для перевірки структури
+
+    subcategories.forEach(subcategory => {
+      const button = document.createElement('button');
+      button.className = 'subcategory-button';
+      button.textContent = subcategory.subcategory_name;
+      button.onclick = () => loadProducts(subcategory.id); // Завантажуємо товари для вибраної підкатегорії
+      container.appendChild(button);
+    });
+
+    // Ховаємо список товарів і очищаємо його
+    const productContainer = document.getElementById('product-container');
+    productContainer.innerHTML = '';
+    productContainer.style.display = 'none';
+  } catch (error) {
+    console.error('Помилка завантаження підкатегорій:', error);
+  }
+}
+
+// Функція для завантаження товарів
+async function loadProducts(subcategoryId) {
+  try {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const products = await response.json();
+
+    const container = document.getElementById('product-container');
+    container.innerHTML = '';
+    container.style.display = 'block';
+
+    if (products.length === 0) {
+      container.innerHTML = '<p>Товари не знайдені для цієї підкатегорії.</p>';
+    } else {
+      const ul = document.createElement('ul'); // Створюємо елемент списку
+
+      products.forEach(product => {
+        const li = document.createElement('li');
+        li.className = 'product-item';
+
+        li.innerHTML = `<strong>${product.name}</strong>: ${product.description}`;
+        ul.appendChild(li);
       });
-  </script>
+
+      container.appendChild(ul);
+    }
+  } catch (error) {
+    console.error('Помилка завантаження товарів:', error);
+    const container = document.getElementById('product-container');
+    container.innerHTML = `<p>Сталася помилка при завантаженні товарів: ${error.message}</p>`;
+  }
+}
+
+// Завантажуємо категорії при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', loadCategories);  
+
+  //переммикання між сторінками
+  document.querySelectorAll('.sidebar-btn').forEach(button => {
+  button.addEventListener('click', function() {
+    const targetPage = button.getAttribute('data-target');
+    window.location.href = targetPage;
+  });
+});
+</script>
 </body>
 </html>
